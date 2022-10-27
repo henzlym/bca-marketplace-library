@@ -2,7 +2,7 @@
 
 /**
  * Plugin Name:       Marketplace Library
- * Description:       Allow your themes and plugins to be avaialabe to the public.
+ * Description:       Allow your themes and plugins to be available to the public.
  * Requires at least: 5.8
  * Requires PHP:      7.0
  * Version:           1.0
@@ -23,11 +23,11 @@ function marketplace_plugin_library_set_wp_is_appication_passwords_available( $a
 	
 	$dev_enviornments = array( 'local', 'development', 'staging', 'dev', 'localhost', 'test' );
 	$needle = explode('.', wp_parse_url( site_url(), PHP_URL_HOST ))[0];
-	if (in_array(wp_get_environment_type(), $dev_enviornments) && !is_ssl()) {
+	if (in_array(wp_get_environment_type(), $dev_enviornments)) {
 		$available = true;
 	}
 
-	if (in_array( $needle, $dev_enviornments) && !is_ssl()) {
+	if (in_array( $needle, $dev_enviornments)) {
 		$available = true;
 	}
 

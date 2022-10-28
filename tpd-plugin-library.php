@@ -15,9 +15,11 @@
  */
 define('MARKETPLACE_URL', plugin_dir_url(__FILE__));
 define('MARKETPLACE_PATH', plugin_dir_path(__FILE__));
+define('MARKETPLACE_TESTMODE', get_option('marketplace_testmode') );
 
 require_once MARKETPLACE_PATH . '/includes/class-rest-plugins-controller.php';
 require_once MARKETPLACE_PATH . '/includes/class-rest-themes-controller.php';
+require_once MARKETPLACE_PATH . '/includes/admin/class-admin.php';
 
 function marketplace_plugin_library_set_wp_is_appication_passwords_available( $available ) {
 	

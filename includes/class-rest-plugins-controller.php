@@ -21,7 +21,7 @@ class Marketplace_REST_Posts_Controller extends WP_REST_Plugins_Controller
 				array(
 					'methods'             => WP_REST_Server::READABLE,
 					'callback'            => array( $this, 'set_get_items' ),
-					'permission_callback' => array( $this, 'get_items_permissions_check' ),
+					'permission_callback' => ( MARKETPLACE_TESTMODE ) ? '__return_true' : array( $this, 'get_items_permissions_check' ),
 					'args'                => $this->get_collection_params(),
 				),
 				array(

@@ -6,12 +6,17 @@
  * Requires at least: 5.8
  * Requires PHP:      7.0
  * Version:           1.0
- * Author:            
+ * Author:
  * License:           GPL-2.0-or-later
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain:       marketplace-library
  *
  * @package           create-block
+ */
+
+/**
+ * Determining Plugin and Content Directories
+ * @see https://developer.wordpress.org/plugins/plugin-basics/determining-plugin-and-content-directories/#constants
  */
 define('MARKETPLACE_FILE', __FILE__);
 define('MARKETPLACE_URL', plugin_dir_url(__FILE__));
@@ -21,10 +26,12 @@ define('MARKETPLACE_TESTMODE', get_option('marketplace_testmode') );
 require_once MARKETPLACE_PATH . '/includes/class-marketplace-authorization.php';
 require_once MARKETPLACE_PATH . '/includes/class-rest-plugins-controller.php';
 require_once MARKETPLACE_PATH . '/includes/class-rest-themes-controller.php';
+require_once MARKETPLACE_PATH . '/includes/admin/class-admin-callbacks.php';
 require_once MARKETPLACE_PATH . '/includes/admin/class-admin.php';
+require_once MARKETPLACE_PATH . '/includes/admin/class-settings.php';
 
 function marketplace_plugin_library_set_wp_is_appication_passwords_available( $available ) {
-	
+
 	$dev_enviornments = array( 'local', 'development', 'staging', 'dev', 'localhost', 'test' );
 	$needle = explode('.', wp_parse_url( site_url(), PHP_URL_HOST ))[0];
 	if (in_array(wp_get_environment_type(), $dev_enviornments)) {

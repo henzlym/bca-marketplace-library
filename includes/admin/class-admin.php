@@ -43,6 +43,14 @@ if (!class_exists('Marketplace_Admin')) {
             <style>
                 .marketplace.hide-title > th {display: none;}
                 .marketplace.hide-title > td {padding-left: 0;padding-right: 0;}
+				.button.is-destructive {
+					color: #cc1818;
+					border-color: #cc1818;
+				}
+				.button.is-destructive:hover{
+					color: #710d0d;
+					border-color: #710d0d;
+				}
             </style>
             <?php
         }
@@ -79,6 +87,9 @@ if (!class_exists('Marketplace_Admin')) {
                 return;
             }
 
+			if (isset($_GET['password']) && $_GET['password']) {
+				add_settings_error('marketplace_manager_notices', 'marketplace_library_settings_message','The marketplace has been authorized.', 'updated');
+			}
             // add error/update messages
             settings_errors('marketplace_manager_notices');
 

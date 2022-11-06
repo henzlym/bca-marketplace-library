@@ -12,12 +12,11 @@ if (!class_exists('Marketplace_Admin_Callbacks')) {
         public function input_field($args)
         {
 
-            $option = isset($args['option_group']) ? get_option($args['option_group']) : false;
+			$value = (isset($args['value'])) ? $args['value'] : $args['default'];
+
             if ( isset($args['name']) && $args['option_group'] !== $args['name'] ) {
-                $value = (isset($option[$args['name']])) ? $option[$args['name']] : $args['default'];
                 $name = isset($args['name']) ? $args['option_group'] . '[' . $args['name'] . ']' : false;
             } else {
-                $value = ( $option ) ? $option : $args['default'];
                 $name = $args['name'];
             }
             $type = isset($args['type']) ? $args['type'] : 'text';
@@ -48,7 +47,7 @@ if (!class_exists('Marketplace_Admin_Callbacks')) {
                 $type = isset($args['type']) ? $args['type'] : 'text';
             }
             $title = isset($args['title']) ? $args['title'] : '';
-
+			$class = isset($args['button_class']) ? $args['button_class'] : '';
             if (!$name) return null;
 
             $attributes = '';
@@ -57,7 +56,7 @@ if (!class_exists('Marketplace_Admin_Callbacks')) {
                 $attributes_args[] = checked($value, true, false);
                 $attributes .= implode(' ', $attributes_args);
             }
-            submit_button( $title, 'small', $args['name'] );
+            submit_button( $title, $class, $args['name'] );
         }
     }
 

@@ -21,7 +21,7 @@ if (!class_exists('Marketplace_Settings')) {
         }
         public function init_settings()
         {
-            $this->settings = array(
+			$this->settings = array(
                 array(
                     'option_group' => 'marketplace-library-general',
                     'option_name' => 'marketplace_general',
@@ -75,9 +75,9 @@ if (!class_exists('Marketplace_Settings')) {
                         'default' => '',
                         'type' => 'checkbox',
                         'option_group' => 'marketplace_testmode',
-						'permission_callback' => function () {
-							return get_current_user_id() == 1;
-						}
+						'value' => function(){
+							return get_option('marketplace_testmode');
+						},
                     )
                 ),
                 array(
@@ -96,8 +96,11 @@ if (!class_exists('Marketplace_Settings')) {
                         'type' => 'text',
                         'disabled' => true,
                         'option_group' => 'marketplace_library_authorization_token',
+						'value' => function(){
+							return _marketplace_user_has_auth('marketplace_library_authorization_token');
+						},
 						'conditional_callback' => function () {
-							return get_option('marketplace_library_authorization_token');
+							return _marketplace_user_has_auth('marketplace_library_authorization_token');
 						}
                     )
                 ),
@@ -117,14 +120,17 @@ if (!class_exists('Marketplace_Settings')) {
                         'type' => 'text',
                         'disabled' => true,
                         'option_group' => 'marketplace_library_secret_key',
+						'value' => function(){
+							return _marketplace_user_has_auth('marketplace_library_secret_key');
+						},
 						'conditional_callback' => function () {
-							return get_option('marketplace_library_authorization_token');
+							return _marketplace_user_has_auth('marketplace_library_secret_key');
 						}
                     )
                 ),
                 array(
                     'id' => 'marketplace_authorization',
-                    'title' => 'Authorize Marketplace',
+                    'title' => 'Marketplace Authorization',
                     'callback' => array($this->Marketplace_Admin_Callbacks, 'submit_button'),
                     'page' => 'marketplace-library-general',
                     'section' => 'general',
@@ -132,13 +138,35 @@ if (!class_exists('Marketplace_Settings')) {
                         'name' => 'marketplace_authorization',
                         'label_for' => 'marketplace_authorization',
                         'title' => 'Authorize Marketplace',
-                        'class' => 'marketplace hide-title',
+						'class' => 'marketplace hide-title',
+                        'button_class' => '',
                         'description' => '',
                         'default' => '',
                         'type' => 'checkbox',
                         'option_group' => 'marketplace_authorization',
 						'conditional_callback' => function () {
-							return get_option('marketplace_library_authorization_token') ? false : true;
+							return _marketplace_user_has_auth() == false;
+						}
+                    )
+				),
+				array(
+                    'id' => 'marketplace_authorization',
+                    'title' => 'Marketplace Authorization',
+                    'callback' => array($this->Marketplace_Admin_Callbacks, 'submit_button'),
+                    'page' => 'marketplace-library-general',
+                    'section' => 'general',
+                    'args' => array(
+                        'name' => 'marketplace_authorization',
+                        'label_for' => 'marketplace_authorization',
+                        'title' => 'Remove Marketplace Authorization',
+						'class' => 'marketplace hide-title',
+                        'button_class' => 'is-destructive',
+                        'description' => '',
+                        'default' => '',
+                        'type' => 'checkbox',
+                        'option_group' => 'marketplace_authorization',
+						'conditional_callback' => function () {
+							return _marketplace_user_has_auth();
 						}
                     )
                 )
@@ -183,6 +211,10 @@ if (!class_exists('Marketplace_Settings')) {
 						}
 					}
 
+					if (isset($field['args']['value']) && !empty($field['args']['value']) ) {
+						$field['args']['value'] = call_user_func( $field['args']['value'], $field['args'] );
+					}
+
                     add_settings_field(
                         $field['id'],
                         __($field['title']),
@@ -209,6 +241,43 @@ if (!class_exists('Marketplace_Settings')) {
         public function marketplace_auth_sanitize( $values )
         {
 			if (empty($values)) return;
+
+			if (isset($values) && $values == 'Remove Marketplace Authorization') {
+				$marketplace_user_has_auth = _marketplace_user_has_auth();
+				$Marketplace_Authorization = new Marketplace_Authorization();
+				$Marketplace_Authorization->secret_key = $marketplace_user_has_auth['marketplace_library_secret_key'];
+				$authorization = $Marketplace_Authorization->decrypt($marketplace_user_has_auth['marketplace_library_authorization_token']);
+				$remote = wp_remote_post(
+					get_rest_url( null, 'wp/v2/users/'.get_current_user_id().'/application-passwords' ),
+					array(
+						'method' => 'DELETE',
+						'timeout' => 10,
+						'headers' => array(
+							'Authorization' => 'Basic ' .  base64_encode( $authorization )
+						)
+					)
+				);
+				if (
+					is_wp_error($remote)
+					|| 200 !== wp_remote_retrieve_response_code($remote)
+					|| empty(wp_remote_retrieve_body($remote))
+				) {
+					add_settings_error('marketplace_library_notices', 'marketplace_library_settings_message','Something went wrong. The marketplace authorization has not been removed.', 'error');
+					return;
+				}
+
+				$delete = delete_user_meta(
+					get_current_user_id(),
+					'marketplace_library_keys'
+				);
+
+				if ($delete) {
+					add_settings_error('marketplace_library_notices', 'marketplace_library_settings_message','The marketplace authorization has been removed.', 'updated');
+				}
+
+				return;
+
+            }
 
             $admin_url = admin_url( 'authorize-application.php' );
             $auth_url = add_query_arg( array(

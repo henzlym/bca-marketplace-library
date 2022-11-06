@@ -14,8 +14,6 @@ class Marketplace_Authorization
 
         add_action('wp_authorize_application_password_request_errors', array( $this, 'authorize_application_password_testmode' ), 10, 3 );
         add_action( 'rest_after_insert_application_password', array( $this, 'save_application_password' ), 10, 3 );
-        register_activation_hook( MARKETPLACE_FILE, array( $this, 'create_secret_key' ) );
-
 
     }
     /**
@@ -36,14 +34,14 @@ class Marketplace_Authorization
         $application_password = $user_name . ':' . $item['new_password'];
         $this->secret_key = random_int(1000000000000000,9999999999999999);
 		$token = $this->encrypt( $application_password );
-        update_option('marketplace_library_secret_key', $this->secret_key );
-        update_option('marketplace_library_authorization_token', $token );
-    }
-    public function create_secret_key()
-    {
-		if ( ! get_option('marketplace_library_secret_key') ) {
-			update_option('marketplace_library_secret_key', $this->generate_uuid4() );
-		}
+		update_user_meta(
+			$user->ID,
+			'marketplace_library_keys',
+			[
+				'marketplace_library_secret_key' => $this->secret_key,
+				'marketplace_library_authorization_token' => $token
+			]
+		);
     }
     public function authorize_application_password_testmode( $error, $request, $user )
     {
@@ -54,26 +52,6 @@ class Marketplace_Authorization
             $error->remove( 'invalid_redirect_scheme' );
         }
 
-    }
-    /**
-     * Generate a random UUID (version 4).
-     *
-     * @since 4.7.0
-     *
-     * @return string UUID.
-     */
-    public function generate_uuid4() {
-        return sprintf(
-            '%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
-            mt_rand( 0, 0xffff ),
-            mt_rand( 0, 0xffff ),
-            mt_rand( 0, 0xffff ),
-            mt_rand( 0, 0x0fff ) | 0x4000,
-            mt_rand( 0, 0x3fff ) | 0x8000,
-            mt_rand( 0, 0xffff ),
-            mt_rand( 0, 0xffff ),
-            mt_rand( 0, 0xffff )
-        );
     }
     public function encrypt( $string )
     {
